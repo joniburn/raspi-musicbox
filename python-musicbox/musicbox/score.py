@@ -1,5 +1,6 @@
 # スコアファイル
 
+from datetime import datetime, timedelta
 from typing import List
 
 
@@ -101,3 +102,18 @@ class Score:
         cmd_args = line.split(' ')
         if cmd_args[0] == 'ntrack':
             self._ntrack = int(cmd_args[1])
+
+    def build_timeline(self):
+        starttime = datetime.now()
+
+        # dummy implementation
+        timeline = []
+        timeline.append((523.251139, starttime + timedelta(seconds=1)))
+        timeline.append((587.3295515, starttime + timedelta(seconds=2)))
+        timeline.append((659.2551384, starttime + timedelta(seconds=3)))
+        timeline.append((698.4564926, starttime + timedelta(seconds=4)))
+        timeline.append((783.9909137, starttime + timedelta(seconds=5)))
+        timeline.append((880.0000562, starttime + timedelta(seconds=6)))
+        timeline.append((987.7666761, starttime + timedelta(seconds=7)))
+        timeline.append((1046.502345, starttime + timedelta(seconds=8)))
+        return timeline
