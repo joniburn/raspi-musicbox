@@ -2,7 +2,7 @@ from typing import Dict
 
 
 # 平均律音階 ( http://nvc.webcrow.jp/TR4.HTM より)
-PITCH_WIDTH_MAP: Dict[str, float] = {
+PITCH_FREQ_MAP: Dict[str, float] = {
   '1c':  130.812768,
   '1c+': 138.5913007,
   '1d':  146.8323691,

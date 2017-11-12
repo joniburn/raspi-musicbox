@@ -1,6 +1,6 @@
 import os.path
 import sys
-from subprocess import Popen, PIPE, TimeoutExpired
+from subprocess import Popen, PIPE
 from struct import pack
 from time import sleep
 from datetime import datetime

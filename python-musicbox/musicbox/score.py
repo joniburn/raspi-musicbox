@@ -1,7 +1,9 @@
 # スコアファイル
 
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Tuple
+
+from musicbox.scale import PITCH_FREQ_MAP
 
 
 def _is_comment_line(line: str) -> bool:
@@ -30,6 +32,21 @@ class Note:
         if self.duration <= 0 or self.duration > 100:
             raise ScoreParseError(f'duration value should be in range '
                                   f'(0, 100]: {self.duration}')
+
+    def to_timeline(self, bar: float, t: datetime):
+        if self.pitch == 'x':
+            freq = 0  # 休符
+        else:
+            freq = PITCH_FREQ_MAP[self.pitch]
+        notelen = bar / self.step * self.nstep
+        if self.duration == 100:
+            return [(freq, t + timedelta(seconds=notelen))]
+        else:
+            timeline = []
+            notelen_on = notelen * self.duration / 100
+            timeline.append((freq, t + timedelta(seconds=notelen_on)))
+            timeline.append((0, t + timedelta(seconds=notelen)))
+            return timeline
 
 
 class ScoreBlock:
@@ -62,6 +79,19 @@ class ScoreBlock:
             raise ScoreParseError('no bpm line is provided at beggining '
                                   'of score block.')
         self._bpm = int(bpm_line_args[1])
+
+    def build_timeline(self, start: datetime) -> List[Tuple[float, datetime]]:
+        # bpmから各音符の長さを計算
+        bar = 60.0 / self._bpm * 4  # 1小節の長さ。4分音符はこの長さの1/4, ...
+
+        timeline = []
+        cur = start
+        for note in self._notes:
+            items = note.to_timeline(bar, cur)
+            for i in items:
+                timeline.append(i)
+            cur = items[-1][1]
+        return timeline
 
 
 class Score:
@@ -106,14 +136,4 @@ class Score:
     def build_timeline(self):
         starttime = datetime.now()
 
-        # dummy implementation
-        timeline = []
-        timeline.append((523.251139, starttime + timedelta(seconds=1)))
-        timeline.append((587.3295515, starttime + timedelta(seconds=2)))
-        timeline.append((659.2551384, starttime + timedelta(seconds=3)))
-        timeline.append((698.4564926, starttime + timedelta(seconds=4)))
-        timeline.append((783.9909137, starttime + timedelta(seconds=5)))
-        timeline.append((880.0000562, starttime + timedelta(seconds=6)))
-        timeline.append((987.7666761, starttime + timedelta(seconds=7)))
-        timeline.append((1046.502345, starttime + timedelta(seconds=8)))
-        return timeline
+        return self._score_blocks[0].build_timeline(starttime)
