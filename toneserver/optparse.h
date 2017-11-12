@@ -1,4 +1,5 @@
 #ifndef OPTPARSE_H__
+#define OPTPARSE_H__
 
 // コマンドライン引数のパース結果を格納する構造体
 typedef struct {
@@ -16,5 +17,4 @@ typedef struct {
  */
 extern void parse_args(int argc, char **argv, options *opt);
 
-#define OPTPARSE_H__
 #endif /* OPTPARSE_H__ */

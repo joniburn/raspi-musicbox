@@ -1,4 +1,5 @@
 #ifndef TONE_H__
+#define TONE_H__
 
 #include <stdint.h>
 
@@ -24,5 +25,4 @@ extern void setfreq(uint16_t freq);
  */
 extern void tone();
 
-#define TONE_H__
 #endif /* TONE_H__ */
