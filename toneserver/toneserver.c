@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   }
 
   // メインループ
-  uint16_t stdin_buf = 0;
+  uint32_t stdin_buf = 0;
   ssize_t stdin_read_bytes = 0;
   while (1) {
     struct epoll_event events[MAX_EVENTS];
@@ -77,14 +77,20 @@ int main(int argc, char *argv[]) {
           return EXIT_SUCCESS;
         }
         stdin_read_bytes += read_bytes;
-        printf("DEBUG: stdin_read_bytes=%d, stdin_buf=[%u, %u]\n", stdin_read_bytes,
-               ((uint8_t *) &stdin_buf)[0], ((uint8_t *) &stdin_buf)[1]);
+        printf("DEBUG: stdin_read_bytes=%d, "
+               "stdin_buf=[%u, %u, %u, %u]\n", stdin_read_bytes,
+               ((uint8_t *) &stdin_buf)[0], ((uint8_t *) &stdin_buf)[1],
+               ((uint8_t *) &stdin_buf)[2], ((uint8_t *) &stdin_buf)[3]);
 
-        if (stdin_read_bytes >= 2) {
-          uint16_t in = ntohs(stdin_buf);
-          printf("DEBUG: in=%u\n", in);
+        if (stdin_read_bytes >= 4) {
+          // floatのバイトオーダー変換
+          float in;
+          uint32_t converted = ntohl(stdin_buf);
+          memcpy(&in, &converted, sizeof(stdin_buf));
+          printf("DEBUG: converted=%ul, in=%f\n", converted, in);
           setfreq(in);
           stdin_read_bytes = 0;
+          stdin_buf = 0;
         }
       }
     }

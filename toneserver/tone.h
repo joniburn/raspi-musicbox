@@ -1,8 +1,6 @@
 #ifndef TONE_H__
 #define TONE_H__
 
-#include <stdint.h>
-
 /**
  * 音を鳴らすための初期化を行い、定期処理のためのタイマーを返す。
  *
@@ -18,7 +16,7 @@ extern int init_tone(int outpin);
  *
  * @param freq 周波数(Hz)
  */
-extern void setfreq(uint16_t freq);
+extern void setfreq(float freq);
 
 /**
  * GPIOの出力レベルをトグルし、タイマーをセットする。

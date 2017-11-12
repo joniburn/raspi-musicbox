@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <inttypes.h>
 #include <unistd.h>
 #include <sys/timerfd.h>
@@ -49,9 +48,9 @@ int init_tone(int outpin_) {
   return timerfd;
 }
 
-void setfreq(uint16_t freq) {
-  printf("DEBUG: setfreq(%u)\n", freq);
-  if (freq == 0) {
+void setfreq(float freq) {
+  printf("DEBUG: setfreq(%f)\n", freq);
+  if (freq == 0.0) {
     tonetime.interval_ns = 0.0;
   } else {
     int first_note = tonetime.interval_ns == 0.0;
