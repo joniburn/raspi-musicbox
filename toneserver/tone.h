@@ -22,7 +22,7 @@ extern void setfreq(uint16_t freq);
 /**
  * GPIOの出力レベルをトグルし、タイマーをセットする。
  */
-extern void tone(int timerfd);
+extern void tone();
 
 #define TONE_H__
 #endif /* TONE_H__ */

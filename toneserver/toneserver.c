@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/epoll.h>
 #include <arpa/inet.h>
 
@@ -24,8 +26,20 @@ int main(int argc, char *argv[]) {
   int timerfd = init_tone(opt.outpin);
   int epollfd = init_epoll(timerfd);
 
+  // 標準入力をノンブロックに設定する
+  int cur = fcntl(STDIN_FILENO, F_GETFL);
+  if (cur == -1) {
+    perror("fcntl");
+    return EXIT_FAILURE;
+  }
+  int ret = fcntl(STDIN_FILENO, F_SETFL, cur | O_NONBLOCK);
+  if (ret == -1) {
+    perror("fcntl");
+    return EXIT_FAILURE;
+  }
+
   // メインループ
-  uint8_t stdin_buf[2] = {0, 0};
+  uint16_t stdin_buf = 0;
   ssize_t stdin_read_bytes = 0;
   while (1) {
     struct epoll_event events[MAX_EVENTS];
@@ -42,29 +56,33 @@ int main(int argc, char *argv[]) {
 
       // タイマーが発火: tone()を呼ぶ
       if (fd == timerfd) {
-        tone(timerfd);
+        tone();
       }
 
       // 標準入力: 2バイト読んだ数値を周波数としてセットする
       else if (fd == STDIN_FILENO) {
         ssize_t read_bytes = read(STDIN_FILENO,
-                                  stdin_buf + stdin_read_bytes,
+                                  ((uint8_t *) &stdin_buf) + stdin_read_bytes,
                                   sizeof(stdin_buf) - stdin_read_bytes);
         if (read_bytes == -1) {
-          // epollしてるのでEAGAINは起こらない
+          if (errno == EAGAIN) {
+            continue;
+          }
           perror("read");
           return EXIT_FAILURE;
         }
         if (read_bytes == 0) {
           // end of file
-          printf("exitting by end of file.");
+          printf("exitting by end of file.\n");
           return EXIT_SUCCESS;
         }
         stdin_read_bytes += read_bytes;
+        printf("DEBUG: stdin_read_bytes=%d, stdin_buf=[%u, %u]\n", stdin_read_bytes,
+               ((uint8_t *) &stdin_buf)[0], ((uint8_t *) &stdin_buf)[1]);
 
         if (stdin_read_bytes >= 2) {
-          uint16_t in = *((uint16_t *) stdin_buf);
-          in = ntohs(in);
+          uint16_t in = ntohs(stdin_buf);
+          printf("DEBUG: in=%u\n", in);
           setfreq(in);
           stdin_read_bytes = 0;
         }
@@ -86,7 +104,7 @@ static int init_epoll(int timerfd) {
   }
 
   // 監視対象fdその1: 標準入力
-  struct epoll_event ev1 = {EPOLLIN, {0}};
+  struct epoll_event ev1 = {EPOLLIN | EPOLLET, {0}};
   ev1.data.fd = STDIN_FILENO;
   ret = epoll_ctl(epollfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev1);
   if (ret == -1) {
@@ -95,8 +113,8 @@ static int init_epoll(int timerfd) {
   }
 
   // 監視対象fdその2: タイマー
-  struct epoll_event ev2 = {EPOLLIN, {0}};
-  ev1.data.fd = timerfd;
+  struct epoll_event ev2 = {EPOLLIN | EPOLLET, {0}};
+  ev2.data.fd = timerfd;
   ret = epoll_ctl(epollfd, EPOLL_CTL_ADD, timerfd, &ev2);
   if (ret == -1) {
     perror("epoll_ctl");

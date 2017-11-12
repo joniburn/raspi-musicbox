@@ -1,6 +1,6 @@
 CC = gcc
 
-CFLAGS = -W -Wall -Wextra -Werror -g
+CFLAGS = -W -Wall -Wextra -Werror -O3 -std=gnu11
 LDFLAGS = -lrt -lwiringPi
 
 TONESRV_TARGET = toneserver

@@ -58,9 +58,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     ret = parse_int(arg, &value);
     if (ret) {
       argp_error(state, "failed to parse outpin: [%s]", arg);
+      return EINVAL;
     }
     if (value <= 0) {
       argp_error(state, "pin number should be a positive integer: %d\n", value);
+      return EINVAL;
     }
     dest->outpin = value;
     break;
