@@ -17,3 +17,6 @@ $(TONESRV_TARGET): $(TONESRV_OBJS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
+
+clean:
+	rm -f *.o *~ $(TONESRV_TARGET)
