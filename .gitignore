@@ -115,3 +115,6 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# build target
+toneserver/toneserver
