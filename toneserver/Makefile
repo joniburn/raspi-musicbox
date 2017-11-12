@@ -1,13 +1,14 @@
 CC = gcc
 
 CFLAGS = -W -Wall -Wextra -Werror -g
-LDFLAGS = -lrt
+LDFLAGS = -lrt -lwiringPi
 
 TONESRV_TARGET = toneserver
 
 TONESRV_OBJS = \
   toneserver.o \
-	optparse.o
+	optparse.o \
+	tone.o
 
 all: $(TONESRV_TARGET)
 

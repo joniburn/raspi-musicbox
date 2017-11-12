@@ -3,16 +3,15 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
-#include <sys/timerfd.h>
 #include <sys/epoll.h>
 #include <arpa/inet.h>
 
 #include "optparse.h"
+#include "tone.h"
 
 #define MAX_EVENTS 2
 
-static int initialize_timer();
-static int initialize_epoll(int timerfd);
+static int init_epoll(int timerfd);
 
 int main(int argc, char *argv[]) {
   // 引数パース
@@ -22,12 +21,12 @@ int main(int argc, char *argv[]) {
   printf("outpin=%d\n", opt.outpin);
 
   // ファイルディスクリプタの初期化
-  int timerfd = initialize_timer();
-  int epollfd = initialize_epoll(timerfd);
+  int timerfd = init_tone(opt.outpin);
+  int epollfd = init_epoll(timerfd);
 
   // メインループ
   uint8_t stdin_buf[2] = {0, 0};
-  int stdin_read_bytes = 0;
+  ssize_t stdin_read_bytes = 0;
   while (1) {
     struct epoll_event events[MAX_EVENTS];
     int nfds;
@@ -40,29 +39,33 @@ int main(int argc, char *argv[]) {
     }
     for (int i = 0; i < nfds; i++) {
       int fd = events[i].data.fd;
+
+      // タイマーが発火: tone()を呼ぶ
       if (fd == timerfd) {
-        // do timer stuff
-        printf("DEBUG: timer fire\n");
-      } else if (fd == STDIN_FILENO) {
-        // read stdin
+        tone(timerfd);
+      }
+
+      // 標準入力: 2バイト読んだ数値を周波数としてセットする
+      else if (fd == STDIN_FILENO) {
         ssize_t read_bytes = read(STDIN_FILENO,
                                   stdin_buf + stdin_read_bytes,
                                   sizeof(stdin_buf) - stdin_read_bytes);
         if (read_bytes == -1) {
+          // epollしてるのでEAGAINは起こらない
           perror("read");
           return EXIT_FAILURE;
         }
         if (read_bytes == 0) {
           // end of file
+          printf("exitting by end of file.");
           return EXIT_SUCCESS;
         }
         stdin_read_bytes += read_bytes;
-        printf("DEBUG: stdin_read_bytes=%d, stdin_buf=[%u, %u]\n", stdin_read_bytes, stdin_buf[0], stdin_buf[1]);
 
         if (stdin_read_bytes >= 2) {
           uint16_t in = *((uint16_t *) stdin_buf);
           in = ntohs(in);
-          printf("DEBUG: in=%u\n", in);
+          setfreq(in);
           stdin_read_bytes = 0;
         }
       }
@@ -72,18 +75,8 @@ int main(int argc, char *argv[]) {
   return EXIT_SUCCESS;
 }
 
-// タイマー初期化
-static int initialize_timer() {
-  int timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
-  if (timerfd == -1) {
-    perror("timerfd_create");
-    exit(EXIT_FAILURE);
-  }
-  return timerfd;
-}
-
 // メインループ処理のためのepoll初期化
-static int initialize_epoll(int timerfd) {
+static int init_epoll(int timerfd) {
   int ret;
 
   int epollfd = epoll_create1(0);
