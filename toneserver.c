@@ -147,6 +147,10 @@ int main(int argc, char *argv[]) {
           perror("read");
           return EXIT_FAILURE;
         }
+        if (read_bytes == 0) {
+          // end of file
+          exit(EXIT_SUCCESS);
+        }
         stdin_read_bytes += read_bytes;
         printf("DEBUG: stdin_read_bytes=%d, stdin_buf=[%u, %u]\n", stdin_read_bytes, stdin_buf[0], stdin_buf[1]);
 
