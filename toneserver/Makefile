@@ -6,7 +6,8 @@ LDFLAGS = -lrt
 TONESRV_TARGET = toneserver
 
 TONESRV_OBJS = \
-  toneserver.o
+  toneserver.o \
+	optparse.o
 
 all: $(TONESRV_TARGET)
 
