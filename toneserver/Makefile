@@ -10,13 +10,24 @@ TONESRV_OBJS = \
 	optparse.o \
 	tone.o
 
-all: $(TONESRV_TARGET)
+WRITE_D_TARGET = write_d
+
+WRITE_D_OBJS = \
+  write_d.o
+
+all: $(TONESRV_TARGET) $(WRITE_D_TARGET)
 
 $(TONESRV_TARGET): $(TONESRV_OBJS)
 	$(CC) $(LDFLAGS) -o $(TONESRV_TARGET) $(TONESRV_OBJS)
+
+$(WRITE_D_TARGET): $(WRITE_D_OBJS)
+	$(CC) $(LDFLAGS) -o $(WRITE_D_TARGET) $(WRITE_D_OBJS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 clean:
 	rm -f *.o *~ $(TONESRV_TARGET)
+
+test: $(TONESRV_TARGET) $(WRITE_D_TARGET)
+	(./write_d; sleep 5) | ./toneserver -o 18
