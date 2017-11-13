@@ -1,5 +1,6 @@
 # スコアファイル
 
+import re
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
@@ -21,7 +22,7 @@ class Note:
     """音階や長さを持った1つの音"""
 
     def __init__(self, note_line: str):
-        cmd_args = note_line.split(' ')
+        cmd_args = re.split('[ ]+', note_line)
         self.pitch = cmd_args[0]       # 音階
         self.step = int(cmd_args[1])   # 音長基準(何分音符か)
         self.nstep = int(cmd_args[2])  # 音長(step何個分か)
