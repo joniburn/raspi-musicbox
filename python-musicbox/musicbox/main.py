@@ -13,6 +13,8 @@ from musicbox.score import Score
 PIN = [27, 22, 18, 23]
 # toneserver実行ファイル
 TONESRV_EXEC = os.path.join('..', 'toneserver', 'toneserver')
+# noiseserver実行ファイル
+NOISESRV_EXEC = os.path.join('..', 'toneserver', 'noiseserver')
 
 
 def usage(progname: str):
@@ -21,7 +23,8 @@ def usage(progname: str):
 
 
 def playtrack(score: Score, track: int):
-    with Popen([TONESRV_EXEC, '-o', f'{PIN[track]}'],
+    exe = TONESRV_EXEC if track != 3 else NOISESRV_EXEC
+    with Popen([exe, '-o', f'{PIN[track]}'],
                bufsize=0, stdin=PIPE) as p:
         for freq, nexttime in score.build_timeline(track):
             print(f'freq={freq}, nexttime={nexttime}')
