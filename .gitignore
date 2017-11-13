@@ -118,4 +118,5 @@ target/
 
 # build target
 toneserver/toneserver
+toneserver/noiseserver
 toneserver/write_d
