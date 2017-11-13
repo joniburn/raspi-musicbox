@@ -52,41 +52,50 @@ class Note:
 class ScoreBlock:
     """一定のBPMを持ったスコアのブロック"""
 
-    def __init__(self, lines: List[str]):
+    def __init__(self, lines: List[str], ntrack: int):
         self._bpm = 0
-        self._notes = []
+        self._tracks = []
+        for i in range(0, ntrack):
+            self._tracks.append([])
         self._parse(lines)
 
     def _parse(self, lines: List[str]):
-        bpm_parsed = False
+        for lnum, line in enumerate(lines):
+            # 1行目はbpm行 "=== bpm XXX"
+            if lnum == 0:
+                self._parse_bpm(line)
+                continue
 
-        for line in lines:
             # コメント行と空行はスキップ
             if _is_comment_line(line) or not line:
                 continue
 
-            # bpmをパース
-            if not bpm_parsed:
-                self._parse_bpm(line)
-                bpm_parsed = True
-                continue
-
-            self._notes.append(Note(line))
+            # 各トラックをパース
+            track_lines = line.split(',')
+            for i in range(0, len(self._tracks)):
+                if len(track_lines) > i:
+                    track_line = track_lines[i]
+                else:
+                    track_line = ''
+                track_line = track_line.strip()
+                if track_line:
+                    self._tracks[i].append(Note(track_line))
 
     def _parse_bpm(self, bpm_line: str):
         bpm_line_args = bpm_line.split(' ')
-        if bpm_line_args[0] != 'bpm':
+        if bpm_line_args[1] != 'bpm':
             raise ScoreParseError('no bpm line is provided at beggining '
                                   'of score block.')
-        self._bpm = int(bpm_line_args[1])
+        self._bpm = int(bpm_line_args[2])
 
-    def build_timeline(self, start: datetime) -> List[Tuple[float, datetime]]:
+    def build_timeline(self, start: datetime, track: int) \
+            -> List[Tuple[float, datetime]]:
         # bpmから各音符の長さを計算
         bar = 60.0 / self._bpm * 4  # 1小節の長さ。4分音符はこの長さの1/4, ...
 
         timeline = []
         cur = start
-        for note in self._notes:
+        for note in self._tracks[track]:
             items = note.to_timeline(bar, cur)
             for i in items:
                 timeline.append(i)
@@ -98,32 +107,43 @@ class Score:
     """スコアファイルのパース結果を保持するクラス"""
 
     def __init__(self, fname):
-        self._ntrack = 0
+        self.ntrack = 0
+        self._score_blocks = []
         self._parse(fname)
 
     def _parse(self, fname):
         # プロパティセクションとスコア本体の行を読み込む
-        prop_section_lines = []
-        score_section_lines = []
+        prop_lines = []
+        score_blocks = []
         with open(fname) as f:
+            # プロパティセクション
             for line in f:
-                line = line.rstrip()
-                if line == '===':
+                line = line.strip()
+                if line.startswith('==='):
+                    score_blocks.append([line])
                     break
-                prop_section_lines.append(line)
+                prop_lines.append(line)
+
+            # スコア本体
+            current_block_lines = score_blocks[0]
             for line in f:
-                line = line.rstrip()
-                score_section_lines.append(line)
+                line = line.strip()
+                if line.startswith('==='):
+                    next_block_lines = [line]
+                    score_blocks.append(next_block_lines)
+                    current_block_lines = next_block_lines
+                    continue
+                current_block_lines.append(line)
 
         # プロパティのパース
-        for l in prop_section_lines:
+        for l in prop_lines:
             self._parse_prop_line(l)
-        if not self._ntrack:
+        if not self.ntrack:
             raise ScoreParseError('no ntrack is provided.')
 
         # スコア本体のパース
-        # 現在はブロック数1のみ
-        self._score_blocks = [ScoreBlock(score_section_lines)]
+        self._score_blocks = [ScoreBlock(lines, self.ntrack)
+                              for lines in score_blocks]
 
     def _parse_prop_line(self, line: str):
         if _is_comment_line(line):
@@ -131,9 +151,10 @@ class Score:
 
         cmd_args = line.split(' ')
         if cmd_args[0] == 'ntrack':
-            self._ntrack = int(cmd_args[1])
+            self.ntrack = int(cmd_args[1])
 
-    def build_timeline(self):
+    def build_timeline(self, track: int):
         starttime = datetime.now()
 
-        return self._score_blocks[0].build_timeline(starttime)
+        # TODO 現在は1ブロック目のみ
+        return self._score_blocks[0].build_timeline(starttime, track)
