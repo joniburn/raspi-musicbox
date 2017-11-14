@@ -20,10 +20,10 @@ int main(int argc, char *argv[]) {
   options opt;
   parse_args(argc, argv, &opt);
 
-  printf("outpin=%d\n", opt.outpin);
+  printf("outpin=%d, dutyratio=%d\n", opt.outpin, opt.dutyratio);
 
   // ファイルディスクリプタの初期化
-  int timerfd = init_tone(opt.outpin);
+  int timerfd = init_tone(&opt);
   int epollfd = init_epoll(timerfd);
 
   // 標準入力をノンブロックに設定する

@@ -4,6 +4,7 @@
 // コマンドライン引数のパース結果を格納する構造体
 typedef struct {
   int outpin;
+  int dutyratio;
 } options;
 
 /**

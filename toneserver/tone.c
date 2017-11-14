@@ -13,7 +13,9 @@
 typedef struct {
   struct timespec prev;  // 前回の出力レベル切り替え時刻
   float prev_ns_f;  // 前回の出力レベル切り替え時刻のナノ秒部分の小数点以下
-  float interval_ns;  // 出力レベルの切り替え間隔: 0の場合は音を停止する。
+  float interval_high_ns;  // 出力レベルの切り替え間隔: 出力レベルHIGHの保持期間
+  float interval_low_ns;  // 出力レベルの切り替え間隔: 出力レベルLOWの保持期間
+  int paused;  // 真の場合、音を止める
 } tonetime_t;
 static tonetime_t tonetime;
 
@@ -25,10 +27,17 @@ static int level = 0;
 // GPIO出力ピン(BCM)
 static int outpin;
 
+// デューティ比
+static int dutyratio;
+
 // タイマーのファイルディスクリプタ
 int timerfd;
 
-int init_tone(int outpin_) {
+int init_tone(const options *options) {
+  outpin = options->outpin;
+  dutyratio = options->dutyratio;
+  tonetime.paused = 1;
+
   // タイマー初期化
   timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
   if (timerfd == -1) {
@@ -43,7 +52,6 @@ int init_tone(int outpin_) {
     exit(EXIT_FAILURE);
   }
   pinMode(outpin, OUTPUT);
-  outpin = outpin_;
 
   return timerfd;
 }
@@ -51,21 +59,22 @@ int init_tone(int outpin_) {
 void setfreq(float freq) {
   printf("DEBUG: setfreq(%f)\n", freq);
   if (freq == 0.0) {
-    tonetime.interval_ns = 0.0;
+    tonetime.paused = 1;
   } else {
-    int first_note = tonetime.interval_ns == 0.0;
-    tonetime.interval_ns = 1000000000.0 / freq / 2.0;
-    printf("DEBUG: setfreq(): first_note=%d, interval_ns = %f\n", first_note, tonetime.interval_ns);
+    tonetime.paused = 0;
+    float period = 1000000000.0 / freq;
+    tonetime.interval_high_ns = period / 100.0 * dutyratio;
+    tonetime.interval_low_ns = period - tonetime.interval_high_ns;
+    printf("DEBUG: setfreq(): interval_high_ns = %f, interval_low_ns = %f\n",
+           tonetime.interval_high_ns, tonetime.interval_low_ns);
     int ret = clock_gettime(CLOCK_MONOTONIC, &tonetime.prev);
     tonetime.prev_ns_f = 0;
     if (ret == -1) {
       perror("clock_gettime");
       exit(EXIT_FAILURE);
     }
-    if (first_note) {
-      tone();
-    }
   }
+  tone();
 }
 
 // GPIO出力レベルをトグルする
@@ -82,7 +91,7 @@ void tone() {
   uint64_t timerval;
   read(timerfd, &timerval, sizeof(timerval));
 
-  if (tonetime.interval_ns == 0.0) {
+  if (tonetime.paused) {
     printf("DEBUG: tone(): stop tone\n");
     if (level) {
       toggle();
@@ -93,7 +102,11 @@ void tone() {
   toggle();
 
   // タイマーが次に発火する時刻を計算する
-  tonetime.prev_ns_f += tonetime.interval_ns;
+  if (level) {
+    tonetime.prev_ns_f += tonetime.interval_high_ns;
+  } else {
+    tonetime.prev_ns_f += tonetime.interval_low_ns;
+  }
   tonetime.prev.tv_nsec += (long) tonetime.prev_ns_f;
   tonetime.prev_ns_f -= (long) tonetime.prev_ns_f;
   tonetime.prev.tv_sec += tonetime.prev.tv_nsec / 1000000000;

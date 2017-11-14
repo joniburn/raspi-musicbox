@@ -1,13 +1,15 @@
 #ifndef TONE_H__
 #define TONE_H__
 
+#include "optparse.h"
+
 /**
  * 音を鳴らすための初期化を行い、定期処理のためのタイマーを返す。
  *
- * @param outpin GPIO出力ピン(BCM)
+ * @param options コマンドライン引数
  * @return タイマーのファイルディスクリプタ
  */
-extern int init_tone(int outpin);
+extern int init_tone(const options *options);
 
 /**
  * 鳴らす音の周波数を設定する。

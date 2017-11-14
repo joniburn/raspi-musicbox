@@ -9,6 +9,7 @@
 
 static struct argp_option option_definitions[] = {
   { "outpin", 'o', "BCM", 0, "The output pin number(BCM).", 0 },
+  { "duty", 'd', "PERCENT", 0, "Duty ratio of tone.", 0 },
   { 0 }
 };
 
@@ -67,6 +68,21 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     dest->outpin = value;
     break;
   }
+  case 'd': {
+    int value, ret;
+    ret = parse_int(arg, &value);
+    if (ret) {
+      argp_error(state, "failed to parse duty: [%s]", arg);
+      return EINVAL;
+    }
+    if (value <= 0 || value >= 100) {
+      argp_error(state, "duty ratio percentage should be "
+                        "in range of (0, 100): %d\n", value);
+      return EINVAL;
+    }
+    dest->dutyratio = value;
+    break;
+  }
   case ARGP_KEY_ARG:
     return 0;
   default:
@@ -76,6 +92,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 }
 
 void parse_args(int argc, char **argv, options *opt) {
+  // default
+  opt->outpin = 18;
+  opt->dutyratio = 50;
+
   struct argp argp = {option_definitions, parse_opt, "", "", NULL, NULL, NULL};
   argp_parse(&argp, argc, argv, 0, NULL, opt);
 }
