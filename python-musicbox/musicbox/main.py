@@ -27,7 +27,7 @@ def playtrack(score: Score, track: int):
     with Popen([exe, '-o', f'{PIN[track]}'],
                bufsize=0, stdin=PIPE) as p:
         for freq, nexttime in score.build_timeline(track):
-            print(f'freq={freq}, nexttime={nexttime}')
+            # print(f'freq={freq}, nexttime={nexttime}')
             p.stdin.write(pack('!f', freq))
             now = datetime.now()
             sleepsec = (nexttime - now).total_seconds()
