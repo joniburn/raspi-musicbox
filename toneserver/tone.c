@@ -54,7 +54,7 @@ void setfreq(float freq) {
     tonetime.interval_ns = 0.0;
   } else {
     int first_note = tonetime.interval_ns == 0.0;
-    tonetime.interval_ns = 1000000000.0 / freq;
+    tonetime.interval_ns = 1000000000.0 / freq / 2.0;
     printf("DEBUG: setfreq(): first_note=%d, interval_ns = %f\n", first_note, tonetime.interval_ns);
     int ret = clock_gettime(CLOCK_MONOTONIC, &tonetime.prev);
     tonetime.prev_ns_f = 0;
