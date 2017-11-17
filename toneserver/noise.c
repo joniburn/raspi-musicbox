@@ -47,8 +47,8 @@ int init_noise(int outpin_) {
     perror("wiringPiSetupGpio");
     exit(EXIT_FAILURE);
   }
-  pinMode(outpin, OUTPUT);
   outpin = outpin_;
+  pinMode(outpin, OUTPUT);
 
   return timerfd;
 }
