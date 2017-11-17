@@ -10,7 +10,7 @@ from musicbox.score import Score
 
 
 # パッシブブザーに配線されているGPIOピン
-PIN = [27, 22, 18, 23]
+PIN = [27, 22, 18, 23, 25, 12, 5, 13]
 # toneserver実行ファイル
 TONESRV_EXEC = os.path.join('..', 'toneserver', 'toneserver')
 # noiseserver実行ファイル
