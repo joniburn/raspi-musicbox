@@ -1,6 +1,7 @@
 # スコアファイル
 
 import re
+from collections import namedtuple
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
@@ -62,7 +63,7 @@ class ScoreBlock:
 
     def _parse(self, lines: List[str]):
         for lnum, line in enumerate(lines):
-            # 1行目はbpm行 "=== bpm XXX"
+            # 1行目はbpm行 "@ bpm XXX"
             if lnum == 0:
                 self._parse_bpm(line)
                 continue
@@ -83,6 +84,7 @@ class ScoreBlock:
                     self._tracks[i].append(Note(track_line))
 
     def _parse_bpm(self, bpm_line: str):
+        bpm_line = bpm_line.split(',', maxsplit=1)[0]
         bpm_line_args = bpm_line.split(' ')
         if bpm_line_args[1] != 'bpm':
             raise ScoreParseError('no bpm line is provided at beggining '
@@ -104,11 +106,16 @@ class ScoreBlock:
         return timeline
 
 
+TrackProperties = namedtuple('TrackProperties', ['mode'])
+"""トラック毎のプロパティ"""
+
+
 class Score:
     """スコアファイルのパース結果を保持するクラス"""
 
     def __init__(self, fname):
         self.ntrack = 0
+        self._track_props = []
         self._score_blocks = []
         self._parse(fname)
 
@@ -120,7 +127,7 @@ class Score:
             # プロパティセクション
             for line in f:
                 line = line.strip()
-                if line.startswith('==='):
+                if line.startswith('@'):
                     score_blocks.append([line])
                     break
                 prop_lines.append(line)
@@ -129,7 +136,7 @@ class Score:
             current_block_lines = score_blocks[0]
             for line in f:
                 line = line.strip()
-                if line.startswith('==='):
+                if line.startswith('@'):
                     next_block_lines = [line]
                     score_blocks.append(next_block_lines)
                     current_block_lines = next_block_lines
@@ -147,12 +154,24 @@ class Score:
                               for lines in score_blocks]
 
     def _parse_prop_line(self, line: str):
+        line = line.split(',', maxsplit=1)[0]
         if _is_comment_line(line):
             return
 
         cmd_args = line.split(' ')
         if cmd_args[0] == 'ntrack':
             self.ntrack = int(cmd_args[1])
+            for i in range(0, self.ntrack):
+                self._track_props.append(TrackProperties(mode='tone'))
+        elif cmd_args[0] == 'track':
+            track_num = int(cmd_args[1])
+            key, val = cmd_args[2].split('=', maxsplit=1)
+            if key == 'mode':
+                newval = self._track_props[track_num - 1]._replace(mode=val)
+                self._track_props[track_num - 1] = newval
+
+    def prop(self, track: int):
+        return self._track_props[track]
 
     def build_timeline(self, track: int):
         timeline = []

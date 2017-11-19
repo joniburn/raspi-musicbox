@@ -21,8 +21,10 @@ def usage(progname: str):
 
 
 def playtrack(score: Score, track: int):
-    mode = 'tone' if track != 3 else 'noise'
-    with Popen([SOUND_EXEC, mode, f'{PIN[track]}'],
+    props = score.prop(track)
+    mode = props.mode  # "tone" or "noise"
+    outpin = str(PIN[track])
+    with Popen([SOUND_EXEC, mode, outpin],
                bufsize=0, stdin=PIPE) as p:
         for freq, nexttime in score.build_timeline(track):
             # print(f'freq={freq}, nexttime={nexttime}')
