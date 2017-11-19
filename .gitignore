@@ -117,6 +117,5 @@ target/
 .ipynb_checkpoints
 
 # build target
-toneserver/toneserver
-toneserver/noiseserver
-toneserver/write_d
+gpiosound/gpiosound
+gpiosound/writefloat
