@@ -33,9 +33,9 @@ static int dutyratio;
 // タイマーのファイルディスクリプタ
 int timerfd;
 
-int init_tone(const options *options) {
-  outpin = options->outpin;
-  dutyratio = options->dutyratio;
+int init_tone(const options *opt) {
+  outpin = opt->outpin;
+  dutyratio = opt->dutyratio;
   tonetime.paused = 1;
 
   // タイマー初期化
@@ -57,16 +57,17 @@ int init_tone(const options *options) {
 }
 
 void setfreq(float freq) {
-  printf("DEBUG: setfreq(%f)\n", freq);
-  if (freq == 0.0) {
+  printf("DEBUG: setfreq(%f)\n", (double) freq);
+  if (freq == 0.0f) {
     tonetime.paused = 1;
   } else {
     tonetime.paused = 0;
-    float period = 1000000000.0 / freq;
-    tonetime.interval_high_ns = period / 100.0 * dutyratio;
+    float period = 1000000000.0f / freq;
+    tonetime.interval_high_ns = period / 100.0f * dutyratio;
     tonetime.interval_low_ns = period - tonetime.interval_high_ns;
     printf("DEBUG: setfreq(): interval_high_ns = %f, interval_low_ns = %f\n",
-           tonetime.interval_high_ns, tonetime.interval_low_ns);
+           (double) tonetime.interval_high_ns,
+           (double) tonetime.interval_low_ns);
     int ret = clock_gettime(CLOCK_MONOTONIC, &tonetime.prev);
     tonetime.prev_ns_f = 0;
     if (ret == -1) {

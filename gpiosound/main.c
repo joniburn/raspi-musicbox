@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
           float in;
           uint32_t converted = ntohl(stdin_buf);
           memcpy(&in, &converted, sizeof(stdin_buf));
-          printf("DEBUG: converted=%ul, in=%f\n", converted, in);
+          printf("DEBUG: converted=%ul, in=%f\n", converted, (double) in);
           setfreq(in);
           stdin_read_bytes = 0;
           stdin_buf = 0;
