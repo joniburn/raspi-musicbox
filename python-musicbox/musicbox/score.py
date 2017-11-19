@@ -155,7 +155,13 @@ class Score:
             self.ntrack = int(cmd_args[1])
 
     def build_timeline(self, track: int):
+        timeline = []
         starttime = datetime.now()
 
-        # TODO 現在は1ブロック目のみ
-        return self._score_blocks[0].build_timeline(starttime, track)
+        for block in self._score_blocks:
+            newtimeline = block.build_timeline(starttime, track)
+            timeline.extend(newtimeline)
+            if len(newtimeline) == 0:
+                break
+            starttime = newtimeline[-1][1]
+        return timeline
