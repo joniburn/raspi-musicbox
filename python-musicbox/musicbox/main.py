@@ -11,10 +11,8 @@ from musicbox.score import Score
 
 # パッシブブザーに配線されているGPIOピン
 PIN = [27, 22, 18, 23, 25, 12, 5, 13]
-# toneserver実行ファイル
-TONESRV_EXEC = os.path.join('..', 'toneserver', 'toneserver')
-# noiseserver実行ファイル
-NOISESRV_EXEC = os.path.join('..', 'toneserver', 'noiseserver')
+# 実行ファイル
+SOUND_EXEC = os.path.join('..', 'gpiosound', 'gpiosound')
 
 
 def usage(progname: str):
@@ -23,8 +21,8 @@ def usage(progname: str):
 
 
 def playtrack(score: Score, track: int):
-    exe = TONESRV_EXEC if track != 3 else NOISESRV_EXEC
-    with Popen([exe, '-o', f'{PIN[track]}'],
+    mode = 'tone' if track != 3 else 'noise'
+    with Popen([SOUND_EXEC, mode, f'{PIN[track]}'],
                bufsize=0, stdin=PIPE) as p:
         for freq, nexttime in score.build_timeline(track):
             # print(f'freq={freq}, nexttime={nexttime}')
