@@ -59,5 +59,8 @@ $(WRITEFLOAT_TARGET): $(WRITEFLOAT_OBJS)
 clean:
 	rm -f *.o *~ $(TONESRV_TARGET) $(WRITEFLOAT_TARGET) $(NOISESRV_TARGET)
 
-test: $(TONESRV_TARGET) $(WRITEFLOAT_TARGET)
-	(./writefloat 440.0; sleep 5) | ./gpiosound -o 18
+test.tone: $(TONESRV_TARGET) $(WRITEFLOAT_TARGET)
+	(./writefloat 440.0; sleep 5) | ./gpiosound tone 18
+
+test.noise: $(TONESRV_TARGET) $(WRITEFLOAT_TARGET)
+	(./writefloat 8372.020363; sleep 2) | ./gpiosound noise 18

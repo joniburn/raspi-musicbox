@@ -9,7 +9,9 @@
 #include <arpa/inet.h>
 
 #include "optparse.h"
+#include "sound.h"
 #include "tone.h"
+#include "noise.h"
 
 #define MAX_EVENTS 2
 
@@ -22,8 +24,25 @@ int main(int argc, char *argv[]) {
 
   printf("outpin=%d, dutyratio=%d\n", opt.outpin, opt.dutyratio);
 
+  sound s;
+  switch (opt.mode) {
+    case SOUND_MODE_TONE: {
+      s = sound_tone;
+      break;
+    }
+    case SOUND_MODE_NOISE: {
+      s = sound_noise;
+      break;
+    }
+    case SOUND_MODE_UNKNOWN:  // fall through
+    default: {
+      printf("unknown play mode.\n");
+      return EXIT_FAILURE;
+    }
+  }
+
   // ファイルディスクリプタの初期化
-  int timerfd = init_tone(&opt);
+  int timerfd = s.init(&opt);
   int epollfd = init_epoll(timerfd);
 
   // 標準入力をノンブロックに設定する
@@ -56,7 +75,7 @@ int main(int argc, char *argv[]) {
 
       // タイマーが発火: tone()を呼ぶ
       if (fd == timerfd) {
-        tone();
+        s.do_sound();
       }
 
       // 標準入力: 2バイト読んだ数値を周波数としてセットする
@@ -88,7 +107,7 @@ int main(int argc, char *argv[]) {
           uint32_t converted = ntohl(stdin_buf);
           memcpy(&in, &converted, sizeof(stdin_buf));
           printf("DEBUG: converted=%ul, in=%f\n", converted, (double) in);
-          setfreq(in);
+          s.setfreq(in);
           stdin_read_bytes = 0;
           stdin_buf = 0;
         }

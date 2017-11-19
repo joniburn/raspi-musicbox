@@ -7,6 +7,17 @@
 #include <wiringPi.h>
 
 #include "tone.h"
+#include "sound.h"
+
+static int tone_init(const options *opt);
+static void tone_setfreq(float freq);
+static void tone(void);
+
+sound sound_tone = {
+  .init = tone_init,
+  .setfreq = tone_setfreq,
+  .do_sound = tone,
+};
 
 /**
  * 出力レベルを定期的に切り替えるための時刻を保持する構造体。
@@ -32,9 +43,15 @@ static int outpin;
 static unsigned char dutyratio;
 
 // タイマーのファイルディスクリプタ
-int timerfd;
+static int timerfd;
 
-int init_tone(const options *opt) {
+/**
+ * 音を鳴らすための初期化を行い、定期処理のためのタイマーを返す。
+ *
+ * @param options コマンドライン引数
+ * @return タイマーのファイルディスクリプタ
+ */
+int tone_init(const options *opt) {
   outpin = opt->outpin;
   dutyratio = opt->dutyratio;
   tonetime.paused = 1;
@@ -57,7 +74,14 @@ int init_tone(const options *opt) {
   return timerfd;
 }
 
-void setfreq(float freq) {
+/**
+ * 鳴らす音の周波数を設定する。
+ *
+ * 0を設定した場合、音を停止する。
+ *
+ * @param freq 周波数(Hz)
+ */
+void tone_setfreq(float freq) {
   printf("DEBUG: setfreq(%f)\n", (double) freq);
   if (freq == 0.0f) {
     tonetime.paused = 1;
@@ -86,6 +110,9 @@ static inline void toggle(void) {
   digitalWrite(outpin, level ? 1 : 0);
 }
 
+/**
+ * GPIOの出力レベルをトグルし、タイマーをセットする。
+ */
 void tone(void) {
   int ret;
 

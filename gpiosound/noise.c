@@ -2,10 +2,22 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <math.h>
 #include <sys/timerfd.h>
 #include <wiringPi.h>
 
 #include "noise.h"
+#include "sound.h"
+
+static int noise_init(const options *opt);
+static void noise_setfreq(float freq);
+static void noise(void);
+
+sound sound_noise = {
+  .init = noise_init,
+  .setfreq = noise_setfreq,
+  .do_sound = noise,
+};
 
 /**
  * 短周期ノイズか
@@ -31,9 +43,17 @@ static noisetime_t noisetime;
 static int outpin;
 
 // タイマーのファイルディスクリプタ
-int timerfd;
+static int timerfd;
 
-int init_noise(int outpin_) {
+/**
+ * ノイズ音を鳴らすための初期化を行い、定期処理のためのタイマーを返す。
+ *
+ * @param options コマンドライン引数
+ * @return タイマーのファイルディスクリプタ
+ */
+int noise_init(const options *opt) {
+  outpin = opt->outpin;
+
   // タイマー初期化
   timerfd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
   if (timerfd == -1) {
@@ -47,50 +67,57 @@ int init_noise(int outpin_) {
     perror("wiringPiSetupGpio");
     exit(EXIT_FAILURE);
   }
-  outpin = outpin_;
   pinMode(outpin, OUTPUT);
 
   return timerfd;
 }
 
-void setfreq(float freq) {
-  printf("DEBUG: setfreq(%f)\n", freq);
-  if (freq == 0.0) {
-    noisetime.interval_ns = 0.0;
+/**
+ * 鳴らすノイズ音の周波数を設定する。
+ *
+ * 0を設定した場合、ノイズ音を停止する。
+ *
+ * @param freq 周波数(Hz)
+ */
+void noise_setfreq(float freq) {
+  printf("DEBUG: setfreq(%f)\n", (double) freq);
+  if (freq == 0.0f) {
+    noisetime.interval_ns = 0.0f;
   } else {
-    int first_note = noisetime.interval_ns == 0.0;
-    noisetime.interval_ns = 1000000000.0 / freq;
-    printf("DEBUG: setfreq(): first_note=%d, interval_ns = %f\n", first_note, noisetime.interval_ns);
+    noisetime.interval_ns = 1000000000.0f / freq;
+    printf("DEBUG: setfreq(): interval_ns = %f\n",
+           (double) noisetime.interval_ns);
     int ret = clock_gettime(CLOCK_MONOTONIC, &noisetime.prev);
-    noisetime.prev_ns_f = 0;
+    noisetime.prev_ns_f = 0.0f;
     if (ret == -1) {
       perror("clock_gettime");
       exit(EXIT_FAILURE);
     }
-    if (first_note) {
-      noise();
-    }
   }
+  noise();
 }
 
 // GPIO出力レベルを設定する
-static inline void setlevel() {
+static inline void setlevel(void) {
   // ファミコンノイズロジック http://d.hatena.ne.jp/aike/20121224
   reg >>= 1;
-  reg |= ((reg ^ (reg >> (shortfreq ? 6 : 1))) & 1) << 15;
+  reg |= (uint16_t) ((((uint16_t) (reg ^ (reg >> (shortfreq ? 6u : 1u)))) & 1u) << 15u);
   digitalWrite(outpin, reg & 1);
 }
 
-void noise() {
+/**
+ * GPIOの出力レベルをトグルし、タイマーをセットする。
+ */
+void noise(void) {
   int ret;
 
   // タイマー値の読み取り
   uint64_t timerval;
   read(timerfd, &timerval, sizeof(timerval));
 
-  if (noisetime.interval_ns == 0.0) {
-    printf("DEBUG: noise(): stop tone\n");
-      digitalWrite(outpin, 0);
+  if (noisetime.interval_ns == 0.0f) {
+    printf("DEBUG: noise(): stop noise\n");
+    digitalWrite(outpin, 0);
     return;
   }
 
@@ -99,7 +126,7 @@ void noise() {
   // タイマーが次に発火する時刻を計算する
   noisetime.prev_ns_f += noisetime.interval_ns;
   noisetime.prev.tv_nsec += (long) noisetime.prev_ns_f;
-  noisetime.prev_ns_f -= (long) noisetime.prev_ns_f;
+  noisetime.prev_ns_f -= floorf(noisetime.prev_ns_f);
   noisetime.prev.tv_sec += noisetime.prev.tv_nsec / 1000000000;
   noisetime.prev.tv_nsec = noisetime.prev.tv_nsec % 1000000000;
 
