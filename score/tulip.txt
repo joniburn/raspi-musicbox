@@ -1,6 +1,6 @@
 # tulip
 ntrack 1
-=== bpm 130
+@ bpm 130
 3c 4 1 90
 3d 4 1 90
 3e 4 1

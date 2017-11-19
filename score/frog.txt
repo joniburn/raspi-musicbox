@@ -1,6 +1,6 @@
 # frog song
 ntrack 2
-=== bpm 120
+@ bpm 120
 3d 4 1 90   , x 4 8
 3e 4 1 90
 3f+ 4 1 90

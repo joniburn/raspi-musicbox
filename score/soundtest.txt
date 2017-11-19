@@ -1,6 +1,6 @@
 # sound test for all notes
 ntrack 1
-=== bpm 100
+@ bpm 100
 1c 16 1
 1c+ 16 1
 1d 16 1

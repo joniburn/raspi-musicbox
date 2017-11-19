@@ -1,6 +1,7 @@
 # ff5 main theme
 ntrack 4
-=== bpm 130
+track 4 mode=noise
+@ bpm 130
 4g 4 2 , 2c 8 1 90 , , 8c 4 1 15
 3b 4 1 , 2c 8 1 90 , , 8c 4 1 15
 4c 4 1 , x 4 2     , , 8c 4 1 15
