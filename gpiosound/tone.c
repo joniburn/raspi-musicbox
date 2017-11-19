@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <math.h>
 #include <sys/timerfd.h>
 #include <wiringPi.h>
 
@@ -28,7 +29,7 @@ static int level = 0;
 static int outpin;
 
 // デューティ比
-static int dutyratio;
+static unsigned char dutyratio;
 
 // タイマーのファイルディスクリプタ
 int timerfd;
@@ -79,13 +80,13 @@ void setfreq(float freq) {
 }
 
 // GPIO出力レベルをトグルする
-static inline void toggle() {
+static inline void toggle(void) {
   // printf("%s", level ? "." : "|");
   level = !level;
   digitalWrite(outpin, level ? 1 : 0);
 }
 
-void tone() {
+void tone(void) {
   int ret;
 
   // タイマー値の読み取り
@@ -109,7 +110,7 @@ void tone() {
     tonetime.prev_ns_f += tonetime.interval_low_ns;
   }
   tonetime.prev.tv_nsec += (long) tonetime.prev_ns_f;
-  tonetime.prev_ns_f -= (long) tonetime.prev_ns_f;
+  tonetime.prev_ns_f -= floorf(tonetime.prev_ns_f);
   tonetime.prev.tv_sec += tonetime.prev.tv_nsec / 1000000000;
   tonetime.prev.tv_nsec = tonetime.prev.tv_nsec % 1000000000;
 

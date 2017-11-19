@@ -7,9 +7,21 @@ COMMON_CFLAGS = -std=gnu11 -W -Wall -Wextra -Werror \
   -Wjump-misses-init \
   -Wdouble-promotion \
   -Wshadow \
-  -Wformat=2
+  -Wformat=2 \
+  -Wundef \
+  -Wpointer-arith \
+  -Wcast-align \
+  -Wstrict-prototypes \
+  -Wstrict-overflow=5 \
+  -Wwrite-strings \
+  -Waggregate-return \
+  -Wcast-qual \
+  -Wswitch-default \
+  -Wswitch-enum \
+  -Wconversion \
+  -Wunreachable-code
 
-COMMON_LDFLAGS = -lrt -lwiringPi
+COMMON_LDFLAGS = -lrt -lwiringPi -lm
 
 # "make DEBUG=1" => debug build
 ifeq ($(DEBUG),1)

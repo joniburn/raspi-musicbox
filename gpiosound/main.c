@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
   // メインループ
   uint32_t stdin_buf = 0;
-  ssize_t stdin_read_bytes = 0;
+  size_t stdin_read_bytes = 0;
   while (1) {
     struct epoll_event events[MAX_EVENTS];
     int nfds;
@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
           printf("exitting by end of file.\n");
           return EXIT_SUCCESS;
         }
-        stdin_read_bytes += read_bytes;
-        printf("DEBUG: stdin_read_bytes=%d, "
+        stdin_read_bytes += (size_t) read_bytes;
+        printf("DEBUG: stdin_read_bytes=%u, "
                "stdin_buf=[%u, %u, %u, %u]\n", stdin_read_bytes,
                ((uint8_t *) &stdin_buf)[0], ((uint8_t *) &stdin_buf)[1],
                ((uint8_t *) &stdin_buf)[2], ((uint8_t *) &stdin_buf)[3]);

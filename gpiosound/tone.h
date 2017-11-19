@@ -23,6 +23,6 @@ extern void setfreq(float freq);
 /**
  * GPIOの出力レベルをトグルし、タイマーをセットする。
  */
-extern void tone();
+extern void tone(void);
 
 #endif /* TONE_H__ */

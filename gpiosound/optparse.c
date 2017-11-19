@@ -80,7 +80,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
                         "in range of (0, 100): %d\n", value);
       return EINVAL;
     }
-    dest->dutyratio = value;
+    dest->dutyratio = (unsigned char) value;
     break;
   }
   case ARGP_KEY_ARG:
