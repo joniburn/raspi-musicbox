@@ -1,43 +1,51 @@
 CC = gcc
 
-CFLAGS = -W -Wall -Wextra -Werror -O3 -std=gnu11
-LDFLAGS = -lrt -lwiringPi
+COMMON_CFLAGS = -std=gnu11 -W -Wall -Wextra -Werror \
+  -Wduplicated-cond \
+  -Wlogical-op \
+  -Wnull-dereference \
+  -Wjump-misses-init \
+  -Wdouble-promotion \
+  -Wshadow \
+  -Wformat=2
 
-TONESRV_TARGET = toneserver
+COMMON_LDFLAGS = -lrt -lwiringPi
+
+# "make DEBUG=1" => debug build
+ifeq ($(DEBUG),1)
+  CFLAGS = $(COMMON_CFLAGS) -g
+  LDFLAGS = $(COMMON_LDFLAGS)
+else
+  CFLAGS = $(COMMON_CFLAGS) -DNDEBUG -O3
+  LDFLAGS = $(COMMON_LDFLAGS)
+endif
+
+TONESRV_TARGET = gpiosound
 
 TONESRV_OBJS = \
-  toneserver.o \
+  main.o \
   optparse.o \
-  tone.o
-
-WRITE_D_TARGET = write_d
-
-WRITE_D_OBJS = \
-  write_d.o
-
-NOISESRV_TARGET = noiseserver
-
-NOISESRV_OBJS = \
-  noiseserver.o \
-  optparse.o \
+  tone.o \
   noise.o
 
-all: $(TONESRV_TARGET) $(WRITE_D_TARGET) $(NOISESRV_TARGET)
+WRITEFLOAT_TARGET = writefloat
+
+WRITEFLOAT_OBJS = \
+  writefloat.o
+
+all: $(TONESRV_TARGET) $(WRITEFLOAT_TARGET) $(NOISESRV_TARGET)
 
 $(TONESRV_TARGET): $(TONESRV_OBJS)
 	$(CC) $(LDFLAGS) -o $(TONESRV_TARGET) $(TONESRV_OBJS)
 
-$(WRITE_D_TARGET): $(WRITE_D_OBJS)
-	$(CC) $(LDFLAGS) -o $(WRITE_D_TARGET) $(WRITE_D_OBJS)
-
-$(NOISESRV_TARGET): $(NOISESRV_OBJS)
-	$(CC) $(LDFLAGS) -o $(NOISESRV_TARGET) $(NOISESRV_OBJS)
+$(WRITEFLOAT_TARGET): $(WRITEFLOAT_OBJS)
+	$(CC) $(LDFLAGS) -o $(WRITEFLOAT_TARGET) $(WRITEFLOAT_OBJS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f *.o *~ $(TONESRV_TARGET) $(WRITE_D_TARGET) $(NOISESRV_TARGET)
+	rm -f *.o *~ $(TONESRV_TARGET) $(WRITEFLOAT_TARGET) $(NOISESRV_TARGET)
 
-test: $(TONESRV_TARGET) $(WRITE_D_TARGET)
-	(./write_d; sleep 5) | ./toneserver -o 18
+test: $(TONESRV_TARGET) $(WRITEFLOAT_TARGET)
+	(./writefloat 440.0; sleep 5) | ./gpiosound -o 18
