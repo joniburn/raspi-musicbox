@@ -8,6 +8,7 @@
 
 #include "tone.h"
 #include "sound.h"
+#include "log.h"
 
 static int tone_init(const options *opt);
 static void tone_setfreq(float freq);
@@ -82,7 +83,7 @@ int tone_init(const options *opt) {
  * @param freq 周波数(Hz)
  */
 void tone_setfreq(float freq) {
-  printf("DEBUG: setfreq(%f)\n", (double) freq);
+  debug("setfreq(%f)\n", (double) freq);
   if (freq == 0.0f) {
     tonetime.paused = 1;
   } else {
@@ -90,9 +91,9 @@ void tone_setfreq(float freq) {
     float period = 1000000000.0f / freq;
     tonetime.interval_high_ns = period / 100.0f * dutyratio;
     tonetime.interval_low_ns = period - tonetime.interval_high_ns;
-    printf("DEBUG: setfreq(): interval_high_ns = %f, interval_low_ns = %f\n",
-           (double) tonetime.interval_high_ns,
-           (double) tonetime.interval_low_ns);
+    debug("setfreq(): interval_high_ns = %f, interval_low_ns = %f\n",
+          (double) tonetime.interval_high_ns,
+          (double) tonetime.interval_low_ns);
     int ret = clock_gettime(CLOCK_MONOTONIC, &tonetime.prev);
     tonetime.prev_ns_f = 0;
     if (ret == -1) {
@@ -105,7 +106,6 @@ void tone_setfreq(float freq) {
 
 // GPIO出力レベルをトグルする
 static inline void toggle(void) {
-  // printf("%s", level ? "." : "|");
   level = !level;
   digitalWrite(outpin, level ? 1 : 0);
 }
@@ -121,7 +121,7 @@ void tone(void) {
   read(timerfd, &timerval, sizeof(timerval));
 
   if (tonetime.paused) {
-    printf("DEBUG: tone(): stop tone\n");
+    debug("tone(): stop tone\n");
     if (level) {
       toggle();
     }

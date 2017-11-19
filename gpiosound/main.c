@@ -12,6 +12,7 @@
 #include "sound.h"
 #include "tone.h"
 #include "noise.h"
+#include "log.h"
 
 #define MAX_EVENTS 2
 
@@ -96,17 +97,16 @@ int main(int argc, char *argv[]) {
           return EXIT_SUCCESS;
         }
         stdin_read_bytes += (size_t) read_bytes;
-        printf("DEBUG: stdin_read_bytes=%u, "
-               "stdin_buf=[%u, %u, %u, %u]\n", stdin_read_bytes,
-               ((uint8_t *) &stdin_buf)[0], ((uint8_t *) &stdin_buf)[1],
-               ((uint8_t *) &stdin_buf)[2], ((uint8_t *) &stdin_buf)[3]);
+        debug("stdin_read_bytes=%u, stdin_buf=[%u, %u, %u, %u]\n", stdin_read_bytes,
+              ((uint8_t *) &stdin_buf)[0], ((uint8_t *) &stdin_buf)[1],
+              ((uint8_t *) &stdin_buf)[2], ((uint8_t *) &stdin_buf)[3]);
 
         if (stdin_read_bytes >= 4) {
           // floatのバイトオーダー変換
           float in;
           uint32_t converted = ntohl(stdin_buf);
           memcpy(&in, &converted, sizeof(stdin_buf));
-          printf("DEBUG: converted=%ul, in=%f\n", converted, (double) in);
+          debug("converted=%ul, in=%f\n", converted, (double) in);
           s.setfreq(in);
           stdin_read_bytes = 0;
           stdin_buf = 0;

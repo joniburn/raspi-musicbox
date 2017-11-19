@@ -8,6 +8,7 @@
 
 #include "noise.h"
 #include "sound.h"
+#include "log.h"
 
 static int noise_init(const options *opt);
 static void noise_setfreq(float freq);
@@ -80,13 +81,12 @@ int noise_init(const options *opt) {
  * @param freq 周波数(Hz)
  */
 void noise_setfreq(float freq) {
-  printf("DEBUG: setfreq(%f)\n", (double) freq);
+  debug("setfreq(%f)\n", (double) freq);
   if (freq == 0.0f) {
     noisetime.interval_ns = 0.0f;
   } else {
     noisetime.interval_ns = 1000000000.0f / freq;
-    printf("DEBUG: setfreq(): interval_ns = %f\n",
-           (double) noisetime.interval_ns);
+    debug("setfreq(): interval_ns = %f\n", (double) noisetime.interval_ns);
     int ret = clock_gettime(CLOCK_MONOTONIC, &noisetime.prev);
     noisetime.prev_ns_f = 0.0f;
     if (ret == -1) {
@@ -116,7 +116,7 @@ void noise(void) {
   read(timerfd, &timerval, sizeof(timerval));
 
   if (noisetime.interval_ns == 0.0f) {
-    printf("DEBUG: noise(): stop noise\n");
+    debug("noise(): stop noise\n");
     digitalWrite(outpin, 0);
     return;
   }
