@@ -1,8 +1,15 @@
 #ifndef OPTPARSE_H__
 #define OPTPARSE_H__
 
+enum sound_mode {
+  SOUND_MODE_UNKNOWN,
+  SOUND_MODE_TONE,
+  SOUND_MODE_NOISE,
+};
+
 // コマンドライン引数のパース結果を格納する構造体
 typedef struct {
+  enum sound_mode mode;
   int outpin;
   unsigned char dutyratio;
 } options;
