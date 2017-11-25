@@ -1,4 +1,6 @@
-# Raspberry Piで音楽を鳴らす
+# Raspberry Piで音楽を演奏する
+
+[Googleスライド](https://docs.google.com/presentation/d/1v06TiHg_VfW_GpwTSDZcnkdz5-jW30KUHXwWN1498sA/)
 
 ## 必要なもの
 * Raspberry Pi 3 Model B
@@ -14,7 +16,7 @@
 * その他LANケーブル等
 
 ## 配線図
-TODO: ここに画像を貼る
+![配線図](docs/sketch/board.png)
 
 ## 環境
 * OS
@@ -47,16 +49,13 @@ TODO: ここに画像を貼る
 * gpiosound
   * GPIOピン1つを担当し、音が出るように出力レベルをトグルしまくるプロセス。
   * 標準入力から32bit浮動小数点数を読み取り、その値を周波数として音を出力する。
-  * TODO: ここに詳細ドキュメントへのリンクを貼る
 * writefloat
   * gpiosoundのテスト用ツール。
   * コマンドライン引数で指定した浮動小数点数を標準出力に出力する。
   * 周波数440Hzの音を2秒間鳴らす例:
     * `( ./writefloat 440.0; sleep 2 ) | ./gpiosound -o 18`
 
-## 音楽を鳴らす
+## 楽譜ファイルを演奏する
 
     cd python-musicbox
     python -m musicbox.main ../score/disksystem.txt
-
-TODO: ここにPythonプログラムの詳細ドキュメントへのリンクを貼る
