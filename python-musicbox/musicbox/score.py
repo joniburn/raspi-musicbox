@@ -40,7 +40,13 @@ class Note:
             freq = 0  # 休符
         else:
             freq = PITCH_FREQ_MAP[self.pitch]
-        notelen = bar / self.step * self.nstep
+
+        notelen = bar / self.step
+        # N倍する前に、マイクロ秒以下を切り捨てる
+        # このようにしないと、"x 16 1"を10行分と"x 8 5"を1行分にずれが生じる
+        notelen = int(notelen * 1000000) / 1000000.0
+        notelen = notelen * self.nstep
+
         if self.duration == 100:
             return [(freq, t + timedelta(seconds=notelen))]
         else:
@@ -100,8 +106,7 @@ class ScoreBlock:
         cur = start
         for note in self._tracks[track]:
             items = note.to_timeline(bar, cur)
-            for i in items:
-                timeline.append(i)
+            timeline.extend(items)
             cur = items[-1][1]
         return timeline
 
