@@ -1,7 +1,6 @@
 # スコアファイル
 
 import re
-from collections import namedtuple
 from datetime import datetime, timedelta
 from typing import List, Tuple
 
@@ -111,8 +110,12 @@ class ScoreBlock:
         return timeline
 
 
-TrackProperties = namedtuple('TrackProperties', ['mode'])
-"""トラック毎のプロパティ"""
+class TrackProperties:
+    """トラック毎のプロパティ"""
+
+    def __init__(self, mode='tone', duty=None):
+        self.mode = mode
+        self.duty = duty
 
 
 class Score:
@@ -167,13 +170,14 @@ class Score:
         if cmd_args[0] == 'ntrack':
             self.ntrack = int(cmd_args[1])
             for i in range(0, self.ntrack):
-                self._track_props.append(TrackProperties(mode='tone'))
+                self._track_props.append(TrackProperties())
         elif cmd_args[0] == 'track':
             track_num = int(cmd_args[1])
             key, val = cmd_args[2].split('=', maxsplit=1)
             if key == 'mode':
-                newval = self._track_props[track_num - 1]._replace(mode=val)
-                self._track_props[track_num - 1] = newval
+                self._track_props[track_num - 1].mode = val
+            if key == 'duty':
+                self._track_props[track_num - 1].duty = int(val)
 
     def prop(self, track: int):
         return self._track_props[track]
